@@ -1,0 +1,295 @@
+{
+  "problems": [
+    {
+      "id": "two-sum",
+      "title": "两数之和",
+      "difficulty": "easy",
+      "tags": ["数组", "哈希表"],
+      "description": "给定一个整数数组 `nums` 和目标值 `target`，请找出数组中**和为目标值**的那两个整数，并返回它们的下标。\n\n假设每种输入只会对应一个答案，同一个元素不能使用两次。可以按任意顺序返回下标。\n\n**示例**\n- 输入 `nums = [2,7,11,15]`, `target = 9` → 输出 `[0,1]`（2 + 7 = 9）\n- 输入 `nums = [3,2,4]`, `target = 6` → 输出 `[1,2]`\n\n**进阶**：你能想出一个时间复杂度小于 O(n²) 的算法吗？",
+      "func": "two_sum",
+      "signature": "def two_sum(nums: list[int], target: int) -> list[int]:",
+      "match": "sorted",
+      "tests": [
+        { "args": [[2, 7, 11, 15], 9], "expected": [0, 1] },
+        { "args": [[3, 2, 4], 6], "expected": [1, 2] },
+        { "args": [[3, 3], 6], "expected": [0, 1] },
+        { "args": [[-3, 4, 3, 90], 0], "expected": [0, 2] }
+      ],
+      "hints": [
+        "暴力法是两层循环枚举所有数对，O(n²)。想一想：遍历到数字 x 时，其实是在『找之前有没有出现过 target - x』。",
+        "用一个哈希表 dict 存 {数值: 下标}。遍历时先查 `target - nums[i]` 是否已在表中，在就直接返回两个下标；否则把 nums[i] 存入表。一遍扫描即可。",
+        "参考骨架：\n```python\ndef two_sum(nums, target):\n    seen = {}          # 数值 -> 下标\n    for i, x in enumerate(nums):\n        if target - x in seen:\n            return [seen[target - x], i]\n        seen[x] = i\n    return []\n```"
+      ],
+      "reference": "def two_sum(nums, target):\n    seen = {}\n    for i, x in enumerate(nums):\n        if target - x in seen:\n            return [seen[target - x], i]\n        seen[x] = i\n    return []",
+      "followup": "如果数组已排序，可用双指针 O(n)/O(1)；如果要做『两数之和 II - 输入有序数组』对比学习。"
+    },
+    {
+      "id": "valid-parentheses",
+      "title": "有效的括号",
+      "difficulty": "easy",
+      "tags": ["栈", "字符串"],
+      "description": "给定一个只包含 `(`、`)`、`[`、`]`、`{`、`}` 的字符串 `s`，判断字符串是否有效。\n\n有效字符串需满足：左括号必须用相同类型的右括号闭合，且必须以正确的顺序闭合。\n\n**示例**\n- `\"()[]{}\"` → true\n- `\"(]\"` → false\n- `\"([)]\"` → false\n- `\"{[]}\"` → true",
+      "func": "is_valid",
+      "signature": "def is_valid(s: str) -> bool:",
+      "match": "exact",
+      "tests": [
+        { "args": ["()"], "expected": true },
+        { "args": ["()[]{}"], "expected": true },
+        { "args": ["(]"], "expected": false },
+        { "args": ["([)]"], "expected": false },
+        { "args": ["{[]}"], "expected": true },
+        { "args": ["]"], "expected": false }
+      ],
+      "hints": [
+        "『最近的未匹配左括号必须最先被闭合』——这正是栈（后进先出）的特征。",
+        "遇到左括号入栈；遇到右括号时栈顶必须是对应的左括号，否则无效。最后栈必须为空。",
+        "参考骨架：\n```python\ndef is_valid(s):\n    pairs = {')': '(', ']': '[', '}': '{'}\n    stack = []\n    for ch in s:\n        if ch in '([{':\n            stack.append(ch)\n        elif not stack or stack.pop() != pairs[ch]:\n            return False\n    return not stack\n```"
+      ],
+      "reference": "def is_valid(s):\n    pairs = {')': '(', ']': '[', '}': '{'}\n    stack = []\n    for ch in s:\n        if ch in '([{':\n            stack.append(ch)\n        elif not stack or stack.pop() != pairs[ch]:\n            return False\n    return not stack",
+      "followup": "试试『最长有效括号』（hard），用栈或 DP 求长度。"
+    },
+    {
+      "id": "climbing-stairs",
+      "title": "爬楼梯",
+      "difficulty": "easy",
+      "tags": ["动态规划", "记忆化"],
+      "description": "你正在爬楼梯，需要 `n` 阶才能到达楼顶。每次可以爬 1 或 2 个台阶，问有多少种不同的方法可以爬到楼顶？\n\n**示例**\n- n = 2 → 2（1+1 或 2）\n- n = 3 → 3（1+1+1、1+2、2+1）",
+      "func": "climb_stairs",
+      "signature": "def climb_stairs(n: int) -> int:",
+      "match": "exact",
+      "tests": [
+        { "args": [2], "expected": 2 },
+        { "args": [3], "expected": 3 },
+        { "args": [4], "expected": 5 },
+        { "args": [5], "expected": 8 },
+        { "args": [1], "expected": 1 }
+      ],
+      "hints": [
+        "到达第 n 阶的最后一步，要么从 n-1 阶跨 1 步，要么从 n-2 阶跨 2 步。于是 f(n) = f(n-1) + f(n-2) —— 这就是斐波那契数列！",
+        "用两个变量滚动递推即可，不需要数组：a, b = b, a + b。时间 O(n)，空间 O(1)。",
+        "参考骨架：\n```python\ndef climb_stairs(n):\n    a, b = 1, 1   # f(0)=1, f(1)=1\n    for _ in range(n - 1):\n        a, b = b, a + b\n    return b\n```"
+      ],
+      "reference": "def climb_stairs(n):\n    a, b = 1, 1\n    for _ in range(n - 1):\n        a, b = b, a + b\n    return b",
+      "followup": "递归+记忆化与滚动变量两种写法都写一遍，对比空间开销。"
+    },
+    {
+      "id": "max-subarray",
+      "title": "最大子数组和",
+      "difficulty": "medium",
+      "tags": ["动态规划", " Kadane"],
+      "description": "给定整数数组 `nums`，找出具有最大和的**连续**子数组（至少包含一个元素），返回其最大和。\n\n**示例**\n- 输入 `[-2,1,-3,4,-1,2,1,-5,4]` → 输出 `6`（子数组 `[4,-1,2,1]`）",
+      "func": "max_sub_array",
+      "signature": "def max_sub_array(nums: list[int]) -> int:",
+      "match": "exact",
+      "tests": [
+        { "args": [[-2, 1, -3, 4, -1, 2, 1, -5, 4]], "expected": 6 },
+        { "args": [[1]], "expected": 1 },
+        { "args": [[5, 4, -1, 7, 8]], "expected": 23 },
+        { "args": [[-1]], "expected": -1 },
+        { "args": [[-3, -2, -5]], "expected": -2 }
+      ],
+      "hints": [
+        "定义 dp[i] = 以 nums[i] 结尾的最大子数组和。要么单独成段（nums[i]），要么接在前一段后面（dp[i-1] + nums[i]），取较大者。",
+        "dp[i] = max(nums[i], dp[i-1] + nums[i])。因为只依赖前一项，可以用一个变量 cur 滚动，同时用 best 记录全局最大。",
+        "参考骨架：\n```python\ndef max_sub_array(nums):\n    best = cur = nums[0]\n    for x in nums[1:]:\n        cur = max(x, cur + x)\n        best = max(best, cur)\n    return best\n```"
+      ],
+      "reference": "def max_sub_array(nums):\n    best = cur = nums[0]\n    for x in nums[1:]:\n        cur = max(x, cur + x)\n        best = max(best, cur)\n    return best",
+      "followup": "进阶：用分治法（线段树思想）再做一遍，达到 O(n log n)。"
+    },
+    {
+      "id": "binary-search",
+      "title": "二分查找",
+      "difficulty": "easy",
+      "tags": ["数组", "二分查找"],
+      "description": "给定一个 `n` 个元素**升序**的整数数组 `nums` 和目标值 `target`，写一个函数搜索 `nums` 中的 `target`，存在则返回下标，否则返回 `-1`。要求时间复杂度 O(log n)。\n\n**示例**\n- `nums = [-1,0,3,5,9,12], target = 9` → `4`\n- `nums = [-1,0,3,5,9,12], target = 2` → `-1`",
+      "func": "search",
+      "signature": "def search(nums: list[int], target: int) -> int:",
+      "match": "exact",
+      "tests": [
+        { "args": [[-1, 0, 3, 5, 9, 12], 9], "expected": 4 },
+        { "args": [[-1, 0, 3, 5, 9, 12], 2], "expected": -1 },
+        { "args": [[5], 5], "expected": 0 },
+        { "args": [[1, 3, 5, 7], 7], "expected": 3 },
+        { "args": [[], 1], "expected": -1 }
+      ],
+      "hints": [
+        "维护闭区间 [lo, hi] 表示『答案可能在这个范围』。mid = (lo + hi) // 2，比较 nums[mid] 与 target 后收缩一半。",
+        "边界细节最容易错：循环条件是 `lo <= hi`；nums[mid] < target 时 lo = mid + 1；> 时 hi = mid - 1。空数组要直接返回 -1。",
+        "参考骨架：\n```python\ndef search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1\n```"
+      ],
+      "reference": "def search(nums, target):\n    lo, hi = 0, len(nums) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if nums[mid] == target:\n            return mid\n        if nums[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1",
+      "followup": "学习『搜索插入位置』和『在排序数组中查找元素的第一个和最后一个位置』，掌握左/右边界二分。"
+    },
+    {
+      "id": "length-of-longest-substring",
+      "title": "无重复字符的最长子串",
+      "difficulty": "medium",
+      "tags": ["滑动窗口", "哈希表", "字符串"],
+      "description": "给定字符串 `s`，找出不含重复字符的**最长子串**的长度。\n\n**示例**\n- `\"abcabcbb\"` → 3（`\"abc\"`）\n- `\"bbbbb\"` → 1（`\"b\"`）\n- `\"pwwkew\"` → 3（`\"wke\"`，注意必须是子串不是子序列）",
+      "func": "length_of_longest_substring",
+      "signature": "def length_of_longest_substring(s: str) -> int:",
+      "match": "exact",
+      "tests": [
+        { "args": ["abcabcbb"], "expected": 3 },
+        { "args": ["bbbbb"], "expected": 1 },
+        { "args": ["pwwkew"], "expected": 3 },
+        { "args": [""], "expected": 0 },
+        { "args": ["dvdf"], "expected": 3 }
+      ],
+      "hints": [
+        "维护一个窗口 [start, i] 保证窗口内无重复。右指针每前进一位，若新字符与窗口内字符冲突，就收缩左边界。",
+        "用 dict 记录每个字符最后出现的位置。遇到重复字符 ch 且其上次位置 >= start 时，把 start 跳到 last[ch] + 1（直接跳跃，不必逐步收缩）。",
+        "参考骨架：\n```python\ndef length_of_longest_substring(s):\n    last, start, best = {}, 0, 0\n    for i, ch in enumerate(s):\n        if ch in last and last[ch] >= start:\n            start = last[ch] + 1\n        last[ch] = i\n        best = max(best, i - start + 1)\n    return best\n```"
+      ],
+      "reference": "def length_of_longest_substring(s):\n    last, start, best = {}, 0, 0\n    for i, ch in enumerate(s):\n        if ch in last and last[ch] >= start:\n            start = last[ch] + 1\n        last[ch] = i\n        best = max(best, i - start + 1)\n    return best",
+      "followup": "对比『长度最小的子数组』（正整数和 ≥ target），体会滑动窗口的两种收缩方向。"
+    },
+    {
+      "id": "best-time-to-buy-and-sell-stock",
+      "title": "买卖股票的最佳时机",
+      "difficulty": "easy",
+      "tags": ["数组", "一次遍历", "DP"],
+      "description": "给定数组 `prices`，`prices[i]` 是第 i 天的股价。你只能选择**某一天**买入并在**未来的另一天**卖出，求最大利润。无利可图返回 0。\n\n**示例**\n- `[7,1,5,3,6,4]` → 5（第 2 天买、第 5 天卖）\n- `[7,6,4,3,1]` → 0",
+      "func": "max_profit",
+      "signature": "def max_profit(prices: list[int]) -> int:",
+      "match": "exact",
+      "tests": [
+        { "args": [[7, 1, 5, 3, 6, 4]], "expected": 5 },
+        { "args": [[7, 6, 4, 3, 1]], "expected": 0 },
+        { "args": [[2, 4, 1]], "expected": 2 },
+        { "args": [[1]], "expected": 0 }
+      ],
+      "hints": [
+        "暴力是 O(n²) 枚举买卖日。换个角度：卖出那一天固定时，利润 = 当天价格 - 之前出现过的最低价。",
+        "一次遍历，同时维护 min_p（历史最低价）和 best（历史最大利润）。先更新 min_p，再用 p - min_p 更新 best。",
+        "参考骨架：\n```python\ndef max_profit(prices):\n    best, min_p = 0, float('inf')\n    for p in prices:\n        min_p = min(min_p, p)\n        best = max(best, p - min_p)\n    return best\n```"
+      ],
+      "reference": "def max_profit(prices):\n    best, min_p = 0, float('inf')\n    for p in prices:\n        min_p = min(min_p, p)\n        best = max(best, p - min_p)\n    return best",
+      "followup": "进阶『买卖股票的最佳时机 II』（可多次交易贪心）与 III/IV（状态机 DP）。"
+    },
+    {
+      "id": "merge-two-sorted-lists",
+      "title": "合并两个有序链表",
+      "difficulty": "easy",
+      "tags": ["链表", "双指针", "递归"],
+      "description": "将两个**升序**链表合并为一个新的升序链表并返回（拼接已有节点即可）。\n\n链表以数组形式给出：`[1,2,4]` 表示 1→2→4。\n\n**示例**\n- `[1,2,4]` + `[1,3,4]` → `[1,1,2,3,4,4]`",
+      "func": "merge_two_lists",
+      "signature": "def merge_two_lists(l1, l2):",
+      "match": "exact",
+      "arg_builders": ["build_list", "build_list"],
+      "result_serializer": "list_to_array",
+      "setup": "class ListNode:\n    def __init__(self, v=0, nxt=None):\n        self.val, self.next = v, nxt\n\ndef build_list(arr):\n    head = None\n    for v in reversed(arr):\n        head = ListNode(v, head)\n    return head\n\ndef list_to_array(node):\n    out = []\n    while node:\n        out.append(node.val)\n        node = node.next\n    return out",
+      "tests": [
+        { "args": [[1, 2, 4], [1, 3, 4]], "expected": [1, 1, 2, 3, 4, 4] },
+        { "args": [[], []], "expected": [] },
+        { "args": [[], [0]], "expected": [0] },
+        { "args": [[-5, 0, 3], [-2, 8]], "expected": [-5, -2, 0, 3, 8] }
+      ],
+      "hints": [
+        "用『哑结点 dummy』统一头部处理，cur 指针负责拼接。每次比较两个链表当前节点，把较小的接到 cur 后面。",
+        "循环条件 `while l1 and l2`；结束后把没走完的链表整段接上 `cur.next = l1 or l2`。",
+        "参考骨架：\n```python\ndef merge_two_lists(l1, l2):\n    dummy = ListNode()\n    cur = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            cur.next, l1 = l1, l1.next\n        else:\n            cur.next, l2 = l2, l2.next\n        cur = cur.next\n    cur.next = l1 or l2\n    return dummy.next\n```"
+      ],
+      "reference": "def merge_two_lists(l1, l2):\n    dummy = ListNode()\n    cur = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            cur.next, l1 = l1, l1.next\n        else:\n            cur.next, l2 = l2, l2.next\n        cur = cur.next\n    cur.next = l1 or l2\n    return dummy.next",
+      "followup": "进阶『合并 K 个升序链表』：分治或堆（heapq）。"
+    },
+    {
+      "id": "invert-binary-tree",
+      "title": "翻转二叉树",
+      "difficulty": "easy",
+      "tags": ["树", "递归", "DFS"],
+      "description": "翻转一棵二叉树：每个节点的左右子树互换。\n\n树以层序数组表示（`null` 表示空节点），返回值同样转为层序数组比较。\n\n**示例**\n- `[4,2,7,1,3,6,9]` → `[4,7,2,9,6,3,1]`\n- `[1,2]` → `[1,null,2]`",
+      "func": "invert_tree",
+      "signature": "def invert_tree(root):",
+      "match": "exact",
+      "arg_builders": ["build_tree"],
+      "result_serializer": "tree_to_list",
+      "setup": "class TreeNode:\n    def __init__(self, v=0, left=None, right=None):\n        self.val, self.left, self.right = v, left, right\n\ndef build_tree(arr):\n    from collections import deque\n    if not arr:\n        return None\n    root = TreeNode(arr[0])\n    q, i = deque([root]), 1\n    while q and i < len(arr):\n        node = q.popleft()\n        if i < len(arr):\n            v = arr[i]; i += 1\n            if v is not None:\n                node.left = TreeNode(v); q.append(node.left)\n        if i < len(arr):\n            v = arr[i]; i += 1\n            if v is not None:\n                node.right = TreeNode(v); q.append(node.right)\n    return root\n\ndef tree_to_list(root):\n    from collections import deque\n    if root is None:\n        return []\n    out, q = [], deque([root])\n    while q:\n        n = q.popleft()\n        if n is None:\n            out.append(None)\n            continue\n        out.append(n.val)\n        q.append(n.left)\n        q.append(n.right)\n    while out and out[-1] is None:\n        out.pop()\n    return out",
+      "tests": [
+        { "args": [[4, 2, 7, 1, 3, 6, 9]], "expected": [4, 7, 2, 9, 6, 3, 1] },
+        { "args": [[1, 2]], "expected": [1, null, 2] },
+        { "args": [[]], "expected": [] },
+        { "args": [[1, 2, 3]], "expected": [1, 3, 2] }
+      ],
+      "hints": [
+        "递归视角：根的左右子树互换后，左右子树内部也要各自翻转。递归三要素——基础情形（空树）、递归调用、组装结果。",
+        "一句话解法：先递归翻转左右子树，再交换 root.left 与 root.right。注意 Python 多重赋值会先求值右侧，一行即可。",
+        "参考骨架：\n```python\ndef invert_tree(root):\n    if root is None:\n        return None\n    root.left, root.right = invert_tree(root.right), invert_tree(root.left)\n    return root\n```\n迭代写法（队列/BFS）也值得写一遍。"
+      ],
+      "reference": "def invert_tree(root):\n    if root is None:\n        return None\n    root.left, root.right = invert_tree(root.right), invert_tree(root.left)\n    return root",
+      "followup": "用 BFS 队列写迭代版翻转；再练『对称二叉树』『二叉树的最大深度』。"
+    },
+    {
+      "id": "binary-tree-level-order-traversal",
+      "title": "二叉树的层序遍历",
+      "difficulty": "medium",
+      "tags": ["树", "BFS", "队列"],
+      "description": "给定二叉树根节点（层序数组表示，`null` 为空），返回**按层**组织的节点值：`[[3],[9,20],[15,7]]`。\n\n**示例**\n- `[3,9,20,null,null,15,7]` → `[[3],[9,20],[15,7]]`",
+      "func": "level_order",
+      "signature": "def level_order(root):",
+      "match": "exact",
+      "arg_builders": ["build_tree"],
+      "setup": "class TreeNode:\n    def __init__(self, v=0, left=None, right=None):\n        self.val, self.left, self.right = v, left, right\n\ndef build_tree(arr):\n    from collections import deque\n    if not arr:\n        return None\n    root = TreeNode(arr[0])\n    q, i = deque([root]), 1\n    while q and i < len(arr):\n        node = q.popleft()\n        if i < len(arr):\n            v = arr[i]; i += 1\n            if v is not None:\n                node.left = TreeNode(v); q.append(node.left)\n        if i < len(arr):\n            v = arr[i]; i += 1\n            if v is not None:\n                node.right = TreeNode(v); q.append(node.right)\n    return root",
+      "tests": [
+        { "args": [[3, 9, 20, null, null, 15, 7]], "expected": [[3], [9, 20], [15, 7]] },
+        { "args": [[1]], "expected": [[1]] },
+        { "args": [[]], "expected": [] },
+        { "args": [[1, 2, 3, 4, 5, 6, 7]], "expected": [[1], [2, 3], [4, 5, 6, 7]] }
+      ],
+      "hints": [
+        "BFS 天然按层访问：队列里每轮的元素个数就是当前层的节点数。记录进入该轮时的队列长度即可。",
+        "框架：\n```python\nwhile q:\n    level = []\n    for _ in range(len(q)):   # 固定本轮长度，别用 len(q) 动态判断\n        n = q.popleft()\n        level.append(n.val)\n        左右孩子入队\n    out.append(level)\n```",
+        "参考骨架：\n```python\ndef level_order(root):\n    if root is None:\n        return []\n    from collections import deque\n    out, q = [], deque([root])\n    while q:\n        level = []\n        for _ in range(len(q)):\n            n = q.popleft()\n            level.append(n.val)\n            if n.left:  q.append(n.left)\n            if n.right: q.append(n.right)\n        out.append(level)\n    return out\n```"
+      ],
+      "reference": "def level_order(root):\n    if root is None:\n        return []\n    from collections import deque\n    out, q = [], deque([root])\n    while q:\n        level = []\n        for _ in range(len(q)):\n            n = q.popleft()\n            level.append(n.val)\n            if n.left:  q.append(n.left)\n            if n.right: q.append(n.right)\n        out.append(level)\n    return out",
+      "followup": "变式：锯齿形层序（双端队列）、自底向上层序（结果反转）、右视图。"
+    },
+    {
+      "id": "majority-element",
+      "title": "多数元素",
+      "difficulty": "easy",
+      "tags": ["哈希表", "计数", "Boyer-Moore"],
+      "description": "给定大小为 `n` 的数组，找出**出现次数大于 ⌊n/2⌋** 的元素（题目保证存在）。要求 O(n) 时间、O(1) 空间试试。\n\n**示例**\n- `[3,2,3]` → 3\n- `[2,2,1,1,1,2,2]` → 2",
+      "func": "majority_element",
+      "signature": "def majority_element(nums: list[int]):",
+      "match": "exact",
+      "tests": [
+        { "args": [[3, 2, 3]], "expected": 3 },
+        { "args": [[2, 2, 1, 1, 1, 2, 2]], "expected": 2 },
+        { "args": [[1]], "expected": 1 },
+        { "args": [[6, 5, 5]], "expected": 5 }
+      ],
+      "hints": [
+        "入门解法：Counter 计数，O(n)/O(n)。",
+        "O(1) 空间的经典算法是 **Boyer-Moore 投票**：候选 cand 计数为 0 时换成当前元素；相同 +1，不同 -1。多数元素会『抵消』所有其他元素后存活。",
+        "参考骨架：\n```python\ndef majority_element(nums):\n    count, cand = 0, None\n    for x in nums:\n        if count == 0:\n            cand = x\n        count += 1 if x == cand else -1\n    return cand\n```"
+      ],
+      "reference": "def majority_element(nums):\n    count, cand = 0, None\n    for x in nums:\n        if count == 0:\n            cand = x\n        count += 1 if x == cand else -1\n    return cand",
+      "followup": "『求众数 II』：出现次数 > n/3，最多两个候选，双投票。"
+    },
+    {
+      "id": "coin-change",
+      "title": "零钱兑换",
+      "difficulty": "medium",
+      "tags": ["动态规划", "完全背包"],
+      "description": "给定不同面额硬币 `coins` 和总金额 `amount`，计算凑成总金额所需的**最少硬币个数**。凑不出返回 `-1`（每种硬币数量无限）。\n\n**示例**\n- `coins = [1,2,5], amount = 11` → 3（5+5+1）\n- `coins = [2], amount = 3` → -1",
+      "func": "coin_change",
+      "signature": "def coin_change(coins: list[int], amount: int) -> int:",
+      "match": "exact",
+      "tests": [
+        { "args": [[1, 2, 5], 11], "expected": 3 },
+        { "args": [[2], 3], "expected": -1 },
+        { "args": [[1], 0], "expected": 0 },
+        { "args": [[1, 5, 6, 9], 11], "expected": 2 },
+        { "args": [[186, 419, 83, 408], 6249], "expected": 20 }
+      ],
+      "hints": [
+        "完全背包问题。定义 dp[a] = 凑出金额 a 的最少硬币数；dp[0] = 0；dp[a] = min(dp[a - c] + 1) 对每个 c ≤ a。",
+        "用 `INF = amount + 1` 表示不可达（避免 inf 运算），最后 dp[amount] > amount 时返回 -1。双重循环：外层金额、内层硬币。",
+        "参考骨架：\n```python\ndef coin_change(coins, amount):\n    INF = amount + 1\n    dp = [0] + [INF] * amount\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a:\n                dp[a] = min(dp[a], dp[a - c] + 1)\n    return dp[amount] if dp[amount] <= amount else -1\n```"
+      ],
+      "reference": "def coin_change(coins, amount):\n    INF = amount + 1\n    dp = [0] + [INF] * amount\n    for a in range(1, amount + 1):\n        for c in coins:\n            if c <= a:\n                dp[a] = min(dp[a], dp[a - c] + 1)\n    return dp[amount] if dp[amount] <= amount else -1",
+      "followup": "对比『零钱兑换 II』（求方案数，组合 vs 排列循环顺序差异）。"
+    }
+  ]
+}

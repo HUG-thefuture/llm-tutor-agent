@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM 学习助手 Agent</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">🧭 LLM 学习助手 <span class="sub">LangChain · RAG · Agent · 算法</span></div>
+  <div id="health" class="health">连接中…</div>
+</header>
+
+<nav id="tabs">
+  <button data-tab="chat" class="on">💬 对话</button>
+  <button data-tab="learn">📚 学习路径</button>
+  <button data-tab="lc">🧩 LeetCode</button>
+  <button data-tab="dev">🛠️ 开发工作流</button>
+  <button data-tab="cfg">⚙️ 设置</button>
+</nav>
+
+<main>
+  <!-- 对话 -->
+  <section id="tab-chat" class="panel on">
+    <div class="toolbar">
+      <label><input type="checkbox" id="chat-web"> 联网检索</label>
+      <button id="chat-clear" class="ghost">清空对话</button>
+    </div>
+    <div id="chat-log" class="chatlog"></div>
+    <div class="bar">
+      <textarea id="chat-input" rows="2" placeholder="向导师提问：例如『RAG 的切分策略怎么选？』（Enter 发送 / Shift+Enter 换行）"></textarea>
+      <button id="chat-send">发送</button>
+    </div>
+  </section>
+
+  <!-- 学习路径 -->
+  <section id="tab-learn" class="panel">
+    <div class="cols">
+      <div class="col left">
+        <div class="card">
+          <h3>我的目标</h3>
+          <textarea id="goal-input" rows="2" placeholder="例如：从零掌握 LangChain 和 RAG，能独立开发知识库问答应用"></textarea>
+          <button id="goal-plan">生成学习计划</button>
+        </div>
+        <div class="card">
+          <h3>计划步骤</h3>
+          <ol id="path-steps" class="steps"></ol>
+          <div id="path-project" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3>课程库 <span id="lesson-count" class="muted"></span></h3>
+          <ul id="lesson-list" class="lessons"></ul>
+        </div>
+      </div>
+      <div class="col right">
+        <div id="teach-view" class="card hidden">
+          <h3 id="teach-title"></h3>
+          <div id="teach-body" class="md"></div>
+          <div id="exercise-box">
+            <h4>✏️ 练习提交</h4>
+            <div id="ex-prompt" class="md"></div>
+            <textarea id="ex-input" rows="8" placeholder="粘贴你的练习代码 / 答案 / 笔记"></textarea>
+            <button id="ex-submit">提交批改</button>
+            <div id="grade-result" class="md"></div>
+          </div>
+        </div>
+        <div id="teach-empty" class="card muted">← 从左侧选择一讲开始学习，或先生成学习计划</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LeetCode -->
+  <section id="tab-lc" class="panel">
+    <div class="cols">
+      <div class="col left">
+        <div class="card">
+          <h3>题库 <button id="lc-next" class="ghost small">给我推荐一题</button></h3>
+          <ul id="lc-list" class="lessons"></ul>
+        </div>
+      </div>
+      <div class="col right">
+        <div id="lc-view" class="card hidden">
+          <h3><span id="lc-title"></span> <span id="lc-diff" class="badge"></span></h3>
+          <div id="lc-desc" class="md"></div>
+          <div class="toolbar">
+            <button id="lc-run">▶ 运行评测</button>
+            <button id="lc-hint" class="ghost">💡 提示 <span id="lc-hint-level"></span></button>
+            <button id="lc-review" class="ghost">🔍 AI 点评</button>
+            <button id="lc-explain" class="ghost">📖 解法精讲</button>
+          </div>
+          <textarea id="lc-code" rows="12" spellcheck="false" class="code"></textarea>
+          <div id="lc-results" class="md"></div>
+        </div>
+        <div id="lc-empty" class="card muted">← 选择一道题目开始训练</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 开发工作流 -->
+  <section id="tab-dev" class="panel">
+    <div class="card">
+      <h3>开发目标</h3>
+      <textarea id="dev-goal" rows="3" placeholder="例如：用 Python 实现一个线程安全的 LRU 缓存类并附 pytest 测试；或：生成一个 FastAPI 待办事项服务"></textarea>
+      <div class="toolbar">
+        <input id="dev-project" placeholder="项目名（可选）">
+        <button id="dev-run">🚀 启动工作流（思考→计划→审查→开发→测试→复盘）</button>
+        <button id="dev-stop" class="ghost hidden">■ 停止</button>
+      </div>
+      <div id="dev-log" class="devlog muted">工作流事件将实时显示在这里…</div>
+      <div id="dev-report" class="md"></div>
+    </div>
+    <div class="cols">
+      <div class="col left">
+        <div class="card">
+          <h3>历史项目 <button id="dev-refresh" class="ghost small">刷新</button></h3>
+          <ul id="dev-projects" class="lessons"></ul>
+        </div>
+      </div>
+      <div class="col right">
+        <div class="card">
+          <h3 id="dev-file-title">产物文件</h3>
+          <pre id="dev-file" class="code muted">选择左侧项目后查看文件…</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 设置 -->
+  <section id="tab-cfg" class="panel">
+    <div class="cols">
+      <div class="col left">
+        <div class="card">
+          <h3>模型提供方</h3>
+          <table id="cfg-providers" class="tbl"></table>
+          <button id="cfg-test">测试全部连通性</button>
+          <div id="cfg-test-result" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3>知识库</h3>
+          <div id="kb-stats" class="muted"></div>
+          <button id="kb-reindex">重建索引（含向量）</button>
+        </div>
+      </div>
+      <div class="col right">
+        <div class="card">
+          <h3>学习档案</h3>
+          <div id="profile" class="muted md"></div>
+        </div>
+        <div class="card">
+          <h3>说明</h3>
+          <p class="muted">本机 Ollama 优先；外部 API Key 配置在项目根目录 .env（参考 .env.example）。
+          开发工作流的产物写入 workspace/&lt;项目名&gt;/，全程留痕可追溯。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

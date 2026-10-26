@@ -1,0 +1,57 @@
+# ========= LLM 学习助手 Agent 配置 =========
+app:
+  host: 127.0.0.1
+  port: 8787
+
+llm:
+  # 路由策略:
+  #   local_first    优先本机 Ollama，失败自动换外部
+  #   external_first 优先外部强模型（推荐：计划/审查质量更高）
+  #   only           只用 strategy_only 指定的 provider
+  strategy: local_first
+  strategy_only: ""
+  providers:
+    - name: ollama-local
+      kind: ollama
+      base_url: http://127.0.0.1:11434
+      model: qwen3:8b        # 运行时自动探测；探测不到该模型时取 Ollama 列表第一个
+      enabled: "true"
+    - name: deepseek-external
+      kind: openai
+      base_url: https://api.deepseek.com
+      model: deepseek-chat
+      api_key_env: DEEPSEEK_API_KEY
+      enabled: "auto"        # auto = 配了 key 才启用
+    - name: zhipu-external
+      kind: openai
+      base_url: https://open.bigmodel.cn/api/paas/v4
+      model: glm-4-flash
+      api_key_env: ZHIPU_API_KEY
+      enabled: "auto"
+    - name: dashscope-external
+      kind: openai
+      base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model: qwen-plus
+      api_key_env: DASHSCOPE_API_KEY
+      enabled: "auto"
+
+dev_agent:
+  max_plan_cycles: 2      # 计划审查不过时，重做计划的最多次数（之后回退到“思考”阶段）
+  max_dev_cycles: 2       # 测试不过时，回炉重造的最多次数（之后结束并出具报告）
+  max_total_cycles: 6     # 思考→…→测试 整个大循环的硬上限，防止无限循环
+  cmd_timeout: 120        # 运行 pytest / 语法检查的子进程超时（秒）
+  review_provider: ""     # 审查/复盘优先使用的 provider 名（如 deepseek-external），留空按全局策略
+  escalate_model: "qwen3:14b"  # 回炉时自动升级的模型（存在则用；也可填外部模型名如 deepseek-chat）
+
+rag:
+  chunk_size: 700         # 切块目标长度（字符）
+  chunk_overlap: 120
+  top_k: 5
+  use_ollama_embeddings: true   # 若本机有 embedding 模型（如 nomic-embed-text）则启用向量检索
+  embed_candidates: [nomic-embed-text, bge-m3, mxbai-embed-large, snowflake-arctic-embed]
+
+leetcode:
+  timeout_sec: 10         # 单次判题超时（死循环自动拦截）
+
+web:
+  search_enabled: true    # 联网检索（DuckDuckGo），失败自动静默降级为纯本地

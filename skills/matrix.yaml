@@ -1,0 +1,28 @@
+# 技能矩阵：L1—L6 能力分级 → 课程映射（学习路径规划的兜底排序依据）
+tracks:
+  python:
+    L1: [env-and-tools, python-essentials]
+  llm-core:
+    L1: [llm-api-basics]
+    L2: [prompt-engineering, function-calling, doc-lookup]
+  langchain:
+    L2: [langchain-quickstart, langchain-lcel, langchain-structured-output]
+    L3: [langgraph-basics, frameworks-survey]
+  rag:
+    L3: [embeddings-vectorstores, rag-pipeline]
+    L4: [rag-advanced]
+  agent:
+    L4: [agents-and-tools, memory-and-sessions]
+  fullstack:
+    L5: [fastapi-backend, frontend-basics, fullstack-project]
+    L6: [deployment-and-ops]
+  quality:
+    L6: [testing-and-quality]
+
+level_desc:
+  L1: 基础（Python、环境、第一次模型调用）
+  L2: 框架入门（LangChain 核心链路、提示工程、函数调用、查文档）
+  L3: RAG 构建（向量库、完整检索增强流水线、LangGraph）
+  L4: Agent 与工具（ReAct/工具调用/记忆/多 Agent、RAG 进阶）
+  L5: 前后端与部署（FastAPI、前端、全栈项目）
+  L6: 算法与工程化（部署运维、测试与质量、自主进阶）

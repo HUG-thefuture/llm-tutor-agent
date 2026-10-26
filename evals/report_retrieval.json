@@ -1,0 +1,283 @@
+{
+  "generated_at": "2026-10-27 01:43:53",
+  "chunks": 246,
+  "elapsed_sec": 7.7,
+  "bm25": {
+    "label": "纯 BM25",
+    "cases": 21,
+    "hit@1": 0.7142857142857143,
+    "hit@3": 0.8095238095238095,
+    "hit@5": 0.9047619047619048,
+    "mrr": 0.7892857142857143
+  },
+  "bm25_rows": [
+    {
+      "query": "Python 的 asyncio 异步为什么 LLM 应用离不开它",
+      "expect": "02-python-essentials",
+      "rank": 1,
+      "top1": "02-python-essentials.md"
+    },
+    {
+      "query": "dataclass 怎么定义结构化数据",
+      "expect": "02-python-essentials",
+      "rank": 1,
+      "top1": "02-python-essentials.md"
+    },
+    {
+      "query": "OpenAI 兼容接口怎么配置 api_key 和 base_url",
+      "expect": "03-llm-api-basics",
+      "rank": 3,
+      "top1": "06-langchain-quickstart.md"
+    },
+    {
+      "query": "怎么用 few-shot 示例让模型稳定输出 JSON",
+      "expect": "04-prompt-engineering",
+      "rank": 1,
+      "top1": "04-prompt-engineering.md"
+    },
+    {
+      "query": "想查某个库某个版本的官方文档去哪查",
+      "expect": "05-doc-lookup",
+      "rank": 1,
+      "top1": "05-doc-lookup.md"
+    },
+    {
+      "query": "LangChain 第一个程序怎么跑起来",
+      "expect": "06-langchain-quickstart",
+      "rank": 1,
+      "top1": "06-langchain-quickstart.md"
+    },
+    {
+      "query": "function calling 的工具函数怎么定义给模型",
+      "expect": "06b-function-calling",
+      "rank": 2,
+      "top1": "05-doc-lookup.md"
+    },
+    {
+      "query": "LCEL 的管道符 | 把组件串起来是怎么回事",
+      "expect": "07-langchain-lcel",
+      "rank": 6,
+      "top1": "09-langgraph-basics.md"
+    },
+    {
+      "query": "怎么用 Pydantic 让 LLM 输出结构化结果",
+      "expect": "08-langchain-structured-output",
+      "rank": 1,
+      "top1": "08-langchain-structured-output.md"
+    },
+    {
+      "query": "LangGraph 的 StateGraph 状态图怎么定义",
+      "expect": "09-langgraph-basics",
+      "rank": 1,
+      "top1": "09-langgraph-basics.md"
+    },
+    {
+      "query": "Agent 框架有哪些，ReAct 模式是什么",
+      "expect": "14-agents-and-tools",
+      "rank": 1,
+      "top1": "14-agents-and-tools.md"
+    },
+    {
+      "query": "embedding 模型怎么选，向量库有哪些",
+      "expect": "11-embeddings-vectorstores",
+      "rank": 4,
+      "top1": "14-agents-and-tools.md"
+    },
+    {
+      "query": "RAG 切块的 chunk_size 和 overlap 怎么定",
+      "expect": "12-rag-pipeline",
+      "rank": 8,
+      "top1": "20-testing-and-quality.md"
+    },
+    {
+      "query": "混合检索怎么做，BM25 和向量结果怎么融合重排",
+      "expect": "13-rag-advanced",
+      "rank": 1,
+      "top1": "13-rag-advanced.md"
+    },
+    {
+      "query": "怎么给 Agent 注册自定义工具",
+      "expect": "14-agents-and-tools",
+      "rank": 1,
+      "top1": "14-agents-and-tools.md"
+    },
+    {
+      "query": "多轮会话的记忆怎么持久化",
+      "expect": "15-memory-and-sessions",
+      "rank": 1,
+      "top1": "15-memory-and-sessions.md"
+    },
+    {
+      "query": "FastAPI 怎么定义 POST 接口接收 Pydantic 请求体",
+      "expect": "16-fastapi-backend",
+      "rank": 1,
+      "top1": "16-fastapi-backend.md"
+    },
+    {
+      "query": "前端 fetch 怎么调用后端接口",
+      "expect": "17-frontend-basics",
+      "rank": 5,
+      "top1": "18-fullstack-project.md"
+    },
+    {
+      "query": "前后端一体的项目目录怎么组织",
+      "expect": "18-fullstack-project",
+      "rank": 1,
+      "top1": "18-fullstack-project.md"
+    },
+    {
+      "query": "FastAPI 应用怎么用 Docker 部署",
+      "expect": "19-deployment-and-ops",
+      "rank": 1,
+      "top1": "19-deployment-and-ops.md"
+    },
+    {
+      "query": "pytest 的单元测试和参数化怎么写",
+      "expect": "20-testing-and-quality",
+      "rank": 1,
+      "top1": "20-testing-and-quality.md"
+    }
+  ],
+  "hybrid": {
+    "label": "混合检索（BM25+向量 · nomic-embed-text:latest）",
+    "cases": 21,
+    "hit@1": 0.7619047619047619,
+    "hit@3": 0.9523809523809523,
+    "hit@5": 1.0,
+    "mrr": 0.8452380952380952
+  },
+  "hybrid_rows": [
+    {
+      "query": "Python 的 asyncio 异步为什么 LLM 应用离不开它",
+      "expect": "02-python-essentials",
+      "rank": 1,
+      "top1": "02-python-essentials.md"
+    },
+    {
+      "query": "dataclass 怎么定义结构化数据",
+      "expect": "02-python-essentials",
+      "rank": 1,
+      "top1": "02-python-essentials.md"
+    },
+    {
+      "query": "OpenAI 兼容接口怎么配置 api_key 和 base_url",
+      "expect": "03-llm-api-basics",
+      "rank": 3,
+      "top1": "06-langchain-quickstart.md"
+    },
+    {
+      "query": "怎么用 few-shot 示例让模型稳定输出 JSON",
+      "expect": "04-prompt-engineering",
+      "rank": 1,
+      "top1": "04-prompt-engineering.md"
+    },
+    {
+      "query": "想查某个库某个版本的官方文档去哪查",
+      "expect": "05-doc-lookup",
+      "rank": 1,
+      "top1": "05-doc-lookup.md"
+    },
+    {
+      "query": "LangChain 第一个程序怎么跑起来",
+      "expect": "06-langchain-quickstart",
+      "rank": 1,
+      "top1": "06-langchain-quickstart.md"
+    },
+    {
+      "query": "function calling 的工具函数怎么定义给模型",
+      "expect": "06b-function-calling",
+      "rank": 1,
+      "top1": "06b-function-calling.md"
+    },
+    {
+      "query": "LCEL 的管道符 | 把组件串起来是怎么回事",
+      "expect": "07-langchain-lcel",
+      "rank": 3,
+      "top1": "09-langgraph-basics.md"
+    },
+    {
+      "query": "怎么用 Pydantic 让 LLM 输出结构化结果",
+      "expect": "08-langchain-structured-output",
+      "rank": 1,
+      "top1": "08-langchain-structured-output.md"
+    },
+    {
+      "query": "LangGraph 的 StateGraph 状态图怎么定义",
+      "expect": "09-langgraph-basics",
+      "rank": 1,
+      "top1": "09-langgraph-basics.md"
+    },
+    {
+      "query": "Agent 框架有哪些，ReAct 模式是什么",
+      "expect": "14-agents-and-tools",
+      "rank": 1,
+      "top1": "14-agents-and-tools.md"
+    },
+    {
+      "query": "embedding 模型怎么选，向量库有哪些",
+      "expect": "11-embeddings-vectorstores",
+      "rank": 2,
+      "top1": "14-agents-and-tools.md"
+    },
+    {
+      "query": "RAG 切块的 chunk_size 和 overlap 怎么定",
+      "expect": "12-rag-pipeline",
+      "rank": 3,
+      "top1": "20-testing-and-quality.md"
+    },
+    {
+      "query": "混合检索怎么做，BM25 和向量结果怎么融合重排",
+      "expect": "13-rag-advanced",
+      "rank": 1,
+      "top1": "13-rag-advanced.md"
+    },
+    {
+      "query": "怎么给 Agent 注册自定义工具",
+      "expect": "14-agents-and-tools",
+      "rank": 1,
+      "top1": "14-agents-and-tools.md"
+    },
+    {
+      "query": "多轮会话的记忆怎么持久化",
+      "expect": "15-memory-and-sessions",
+      "rank": 1,
+      "top1": "15-memory-and-sessions.md"
+    },
+    {
+      "query": "FastAPI 怎么定义 POST 接口接收 Pydantic 请求体",
+      "expect": "16-fastapi-backend",
+      "rank": 1,
+      "top1": "16-fastapi-backend.md"
+    },
+    {
+      "query": "前端 fetch 怎么调用后端接口",
+      "expect": "17-frontend-basics",
+      "rank": 4,
+      "top1": "18-fullstack-project.md"
+    },
+    {
+      "query": "前后端一体的项目目录怎么组织",
+      "expect": "18-fullstack-project",
+      "rank": 1,
+      "top1": "18-fullstack-project.md"
+    },
+    {
+      "query": "FastAPI 应用怎么用 Docker 部署",
+      "expect": "19-deployment-and-ops",
+      "rank": 1,
+      "top1": "19-deployment-and-ops.md"
+    },
+    {
+      "query": "pytest 的单元测试和参数化怎么写",
+      "expect": "20-testing-and-quality",
+      "rank": 1,
+      "top1": "20-testing-and-quality.md"
+    }
+  ],
+  "delta": {
+    "hit@1": 0.0476,
+    "hit@3": 0.1429,
+    "hit@5": 0.0952,
+    "mrr": 0.056
+  }
+}

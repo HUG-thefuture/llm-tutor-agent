@@ -1,0 +1,8 @@
+# 学习练习用依赖（可选）：按课程需要安装，Agent 本身运行不依赖这些
+# pip install -r requirements-learning.txt
+langchain>=1.0
+langchain-openai>=1.0
+langchain-ollama>=1.0
+langchain-community>=0.4
+langchain-text-splitters>=1.0
+faiss-cpu>=1.8

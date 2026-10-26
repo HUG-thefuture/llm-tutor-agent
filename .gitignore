@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+data/kb_index/
+data/progress/
+workspace/
+.pytest_cache/
+data/userdocs/ 
+logs/ 
