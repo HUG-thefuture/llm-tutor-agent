@@ -86,6 +86,8 @@ class AppConfig:
     rag: RagCfg = field(default_factory=RagCfg)
     leetcode_timeout: int = 10
     web_search_enabled: bool = True
+    access_token: str = ""                 # 非空时 /api/* 需要 X-Access-Token/Bearer/?token= 鉴权（公网部署用）
+    demo_mode: bool = False                # 演示模式：注入 demo provider，无需任何模型即可体验
 
 
 def _build_dataclass(cls, data: dict[str, Any]):
@@ -113,6 +115,17 @@ def load_config(path: Path | None = None) -> AppConfig:
     lc = raw.get("leetcode") or {}
     web = raw.get("web") or {}
 
+    # 访问令牌：config.yaml app.access_token 或环境变量 LLM_TUTOR_TOKEN（非空即开启鉴权）
+    access_token = str(app.get("access_token", "") or os.environ.get("LLM_TUTOR_TOKEN", ""))
+    # 演示模式：config.yaml app.demo_mode 或环境变量 DEMO_MODE=1 → 注入 demo provider（排在降级链末位）
+    demo_mode = bool(app.get("demo_mode", False)) or os.environ.get("DEMO_MODE", "") == "1"
+    if demo_mode and not any(p.kind == "demo" for p in providers):
+        providers.append(ProviderCfg(
+            name="demo-offline", kind="demo",
+            base_url="", model="knowledge-extract",
+            enabled="true",
+        ))
+
     return AppConfig(
         host=str(app.get("host", "127.0.0.1")),
         port=int(app.get("port", 8787)),
@@ -123,4 +136,6 @@ def load_config(path: Path | None = None) -> AppConfig:
         rag=rag,
         leetcode_timeout=int(lc.get("timeout_sec", 10)),
         web_search_enabled=bool(web.get("search_enabled", True)),
+        access_token=access_token,
+        demo_mode=demo_mode,
     )

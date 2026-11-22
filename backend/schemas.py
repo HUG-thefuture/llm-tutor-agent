@@ -61,7 +61,3 @@ class DevRunReq(BaseModel):
 class KBUploadReq(BaseModel):
     title: str
     text: str
-
-
-class LLMTestReq(BaseModel):
-    provider: str = ""

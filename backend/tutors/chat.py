@@ -20,9 +20,10 @@ def _progress_brief(learner_id: str) -> str:
             f"待复习: {', '.join(p['review_queue'][:5]) if p['review_queue'] else '（无）'}")
 
 
-async def chat(llm: LLMClient, kb: KnowledgeBase, message: str,
-               learner_id: str = "default", use_web: bool = False,
-               web_fn=None) -> dict:
+async def prepare(llm: LLMClient, kb: KnowledgeBase, message: str,
+                  learner_id: str = "default", use_web: bool = False,
+                  web_fn=None) -> tuple[list[dict], dict]:
+    """构建对话消息（RAG + 进度画像 + 可选联网）。返回 (messages, meta)；流式/非流式共用。"""
     hits = await kb.search(message, k=4)
     context = "\n\n".join(
         f"【资料 {i+1}】来源: {c.source} · {c.heading}\n{c.text}"
@@ -49,7 +50,29 @@ async def chat(llm: LLMClient, kb: KnowledgeBase, message: str,
     msgs = [{"role": "system", "content": sys_prompt}]
     msgs.extend({"role": h["role"], "content": h["content"]} for h in history)
     msgs.append({"role": "user", "content": message})
+    return msgs, {"grounded": grounded, "web_used": bool(web_block)}
+
+
+async def chat(llm: LLMClient, kb: KnowledgeBase, message: str,
+               learner_id: str = "default", use_web: bool = False,
+               web_fn=None) -> dict:
+    msgs, meta = await prepare(llm, kb, message, learner_id, use_web, web_fn)
     out = await llm.chat(msgs, temperature=0.6)
     memory.append_chat(learner_id, "user", message)
     memory.append_chat(learner_id, "assistant", out)
-    return {"reply": out, "grounded": grounded, "web_used": bool(web_block)}
+    return {"reply": out, **meta}
+
+
+async def chat_stream(llm: LLMClient, kb: KnowledgeBase, message: str,
+                      learner_id: str = "default", use_web: bool = False,
+                      web_fn=None):
+    """流式对话：逐步产出文本增量，结束时落盘历史并返回完整应答。"""
+    msgs, meta = await prepare(llm, kb, message, learner_id, use_web, web_fn)
+    parts: list[str] = []
+    async for delta in llm.chat_stream(msgs, temperature=0.6):
+        parts.append(delta)
+        yield delta
+    full = "".join(parts)
+    memory.append_chat(learner_id, "user", message)
+    memory.append_chat(learner_id, "assistant", full)
+    yield {"__final__": {"reply": full, **meta}}   # 结束标记，路由层识别后不再转发

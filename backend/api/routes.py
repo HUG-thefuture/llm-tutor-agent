@@ -51,6 +51,31 @@ async def chat(req: ChatReq, request: Request):
         raise HTTPException(503, str(e))
 
 
+@api.post("/chat/stream")
+async def chat_stream(req: ChatReq, request: Request):
+    """流式对话（SSE）：delta 增量事件 + 最终 meta/done 事件。"""
+    st = request.app.state
+    web_fn = websearch.web_search if (req.use_web and st.cfg.web_search_enabled) else None
+
+    async def gen():
+        try:
+            async for chunk in chat_tutor.chat_stream(st.llm, st.kb, req.message,
+                                                      req.learner_id, req.use_web, web_fn):
+                if isinstance(chunk, str):
+                    yield f"data: {json.dumps({'type': 'delta', 'text': chunk}, ensure_ascii=False)}\n\n"
+                else:  # 结束标记：{"__final__": {...}}
+                    final = chunk["__final__"]
+                    yield f"data: {json.dumps({'type': 'done', **final}, ensure_ascii=False)}\n\n"
+        except LLMError as e:
+            yield f"data: {json.dumps({'type': 'error', 'text': str(e)}, ensure_ascii=False)}\n\n"
+        except Exception as e:  # 兜底，避免流静默中断
+            yield f"data: {json.dumps({'type': 'error', 'text': f'{type(e).__name__}: {e}'}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                      "X-Accel-Buffering": "no"})
+
+
 # ---------------- 学习 ----------------
 @api.get("/lessons")
 async def lessons(request: Request):
@@ -112,9 +137,9 @@ async def learn_answer(req: AnswerReq, request: Request):
 
 # ---------------- 力扣 ----------------
 @api.get("/leetcode/problems")
-async def lc_problems(request: Request):
+async def lc_problems(request: Request, learner_id: str = "default"):
     st = request.app.state
-    prog = memory.load("default")["leetcode"]
+    prog = memory.load(learner_id)["leetcode"]
     solved = set(prog["solved"])
     return [{**p, "solved": p["id"] in solved} for p in st.bank.list()]
 
