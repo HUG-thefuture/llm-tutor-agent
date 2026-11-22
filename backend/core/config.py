@@ -11,10 +11,12 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]          # D:\llm-tutor-agent
 DATA_DIR = ROOT / "data"
 CURRICULUM_DIR = DATA_DIR / "curriculum"
-USERDOCS_DIR = DATA_DIR / "userdocs"
 LEETCODE_FILE = DATA_DIR / "leetcode" / "problems.json"
-KB_INDEX_DIR = DATA_DIR / "kb_index"
-PROGRESS_DIR = DATA_DIR / "progress"
+# 可写运行时目录（索引/进度/上传）：默认随 data/；云端只读镜像可用 TUTOR_DATA_DIR 重定向到可写卷
+RUNTIME_DIR = Path(os.environ["TUTOR_DATA_DIR"]) if os.environ.get("TUTOR_DATA_DIR") else DATA_DIR
+USERDOCS_DIR = RUNTIME_DIR / "userdocs"
+KB_INDEX_DIR = RUNTIME_DIR / "kb_index"
+PROGRESS_DIR = RUNTIME_DIR / "progress"
 WORKSPACE_DIR = ROOT / "workspace"
 FRONTEND_DIR = ROOT / "frontend"
 

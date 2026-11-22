@@ -52,3 +52,19 @@ def test_lc_problems_per_learner(client, monkeypatch, tmp_path):
     others = {p["id"]: p["solved"]
               for p in client.get("/api/leetcode/problems", params={"learner_id": "someone-else"}).json()}
     assert others["two-sum"] is False
+
+
+def test_runtime_dir_env_override(monkeypatch, tmp_path):
+    """TUTOR_DATA_DIR 重定向可写目录（云端只读镜像场景），课程/题库仍随仓库。"""
+    import importlib
+
+    monkeypatch.setenv("TUTOR_DATA_DIR", str(tmp_path))
+    import backend.core.config as cfg_mod
+    importlib.reload(cfg_mod)
+    try:
+        assert cfg_mod.KB_INDEX_DIR == tmp_path / "kb_index"
+        assert cfg_mod.PROGRESS_DIR == tmp_path / "progress"
+        assert cfg_mod.CURRICULUM_DIR == cfg_mod.DATA_DIR / "curriculum"   # 只读资源不重定向
+    finally:
+        monkeypatch.delenv("TUTOR_DATA_DIR")
+        importlib.reload(cfg_mod)

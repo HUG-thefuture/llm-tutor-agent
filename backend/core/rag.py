@@ -152,6 +152,8 @@ class KnowledgeBase:
     def build(self) -> int:
         self.chunks = []
         for d in self.dirs:
+            if not d.exists():                    # 可选目录（如 userdocs）可能尚未创建
+                continue
             for f in sorted(d.rglob("*")):
                 if f.suffix.lower() not in (".md", ".txt", ".json") or not f.is_file():
                     continue
