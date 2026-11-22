@@ -54,9 +54,22 @@ function mdInline(text) {
   return html;
 }
 
-/* ---------------- 通用请求 ---------------- */
+/* ---------------- 通用请求（含可选访问令牌） ---------------- */
+function authHeaders(extra) {
+  const h = Object.assign({}, extra || {});
+  const tok = localStorage.getItem("tutor_token");
+  if (tok) h["X-Access-Token"] = tok;
+  return h;
+}
+async function askToken() {
+  const tok = prompt("本站已开启访问令牌，请输入 Access Token：");
+  if (!tok) throw new Error("需要访问令牌才能使用本站");
+  localStorage.setItem("tutor_token", tok);
+  return tok;
+}
 async function api(path, opts) {
-  const r = await fetch(API + path, opts);
+  let r = await fetch(API + path, Object.assign({}, opts, {headers: authHeaders((opts || {}).headers)}));
+  if (r.status === 401) { await askToken(); r = await fetch(API + path, Object.assign({}, opts, {headers: authHeaders((opts || {}).headers)})); }
   if (!r.ok) {
     let msg = r.status + " " + r.statusText;
     try { msg = (await r.json()).detail || msg; } catch (e) {}
@@ -65,6 +78,32 @@ async function api(path, opts) {
   return r.json();
 }
 const post = (path, body) => api(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+
+/* ---------------- 学员切换 ---------------- */
+let learnerId = localStorage.getItem("tutor_learner") || "default";
+function knownLearners() {
+  try { return JSON.parse(localStorage.getItem("tutor_learners") || '["default"]'); }
+  catch (e) { return ["default"]; }
+}
+function fillLearner() {
+  const sel = $("learner-sel");
+  const names = knownLearners();
+  if (!names.includes(learnerId)) names.unshift(learnerId);
+  sel.innerHTML = names.map(x => `<option${x === learnerId ? " selected" : ""}>${escapeHtml(x)}</option>`).join("")
+    + `<option value="__new__">＋ 新学员…</option>`;
+}
+async function switchLearner(v) {
+  if (v === "__new__") {
+    const name = (prompt("新学员 ID（用于区分学习档案，如 xiaoming）：") || "").trim();
+    if (!name) { fillLearner(); return; }
+    learnerId = name;
+    const names = knownLearners();
+    if (!names.includes(name)) { names.push(name); localStorage.setItem("tutor_learners", JSON.stringify(names)); }
+  } else { learnerId = v; }
+  localStorage.setItem("tutor_learner", learnerId);
+  fillLearner();
+  loadHealth(); loadLessons(); loadProblems();
+}
 
 /* ---------------- 页签 ---------------- */
 for (const btn of document.querySelectorAll("#tabs button")) {
@@ -102,10 +141,44 @@ async function sendChat() {
   $("chat-input").value = "";
   addMsg("user", text);
   const bubble = addMsg("bot", "…思考中");
+  const mdDiv = bubble.querySelector(".md") || bubble;
+  let acc = "", webUsed = false;
   try {
-    const r = await post("/api/chat", {message: text, use_web: $("chat-web").checked});
-    bubble.innerHTML = `<div class="md">${mdLite(r.reply)}${r.web_used ? '<p class="muted">🌐 已结合网络检索</p>' : ""}</div>`;
-  } catch (e) { bubble.innerHTML = `<div class="md grade-bad">出错了：${escapeHtml(e.message)}</div>`; }
+    const body = JSON.stringify({message: text, learner_id: learnerId, use_web: $("chat-web").checked});
+    let resp = await fetch(API + "/api/chat/stream",
+      {method: "POST", headers: authHeaders({"Content-Type": "application/json"}), body});
+    if (resp.status === 401) { await askToken(); resp = await fetch(API + "/api/chat/stream",
+      {method: "POST", headers: authHeaders({"Content-Type": "application/json"}), body}); }
+    if (!resp.ok || !resp.body) throw new Error("stream " + resp.status);
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, {stream: true});
+      let i;
+      while ((i = buf.indexOf("\n\n")) >= 0) {
+        const frame = buf.slice(0, i); buf = buf.slice(i + 2);
+        if (!frame.startsWith("data: ")) continue;
+        let ev; try { ev = JSON.parse(frame.slice(6)); } catch (e) { continue; }
+        if (ev.type === "delta") { acc += ev.text; mdDiv.innerHTML = `<div class="md">${mdLite(acc)}</div>`; $("chat-log").scrollTop = 1e9; }
+        else if (ev.type === "done") { webUsed = !!ev.web_used; if (!acc && ev.reply) { acc = ev.reply; mdDiv.innerHTML = `<div class="md">${mdLite(acc)}</div>`; } }
+        else if (ev.type === "error") { throw new Error(ev.text); }
+      }
+    }
+    mdDiv.innerHTML = `<div class="md">${mdLite(acc)}${webUsed ? '<p class="muted">🌐 已结合网络检索</p>' : ""}</div>`;
+  } catch (e) {
+    if (acc) {
+      mdDiv.innerHTML = `<div class="md">${mdLite(acc)}<p class="muted">（流式中断：${escapeHtml(e.message)}）</p></div>`;
+    } else {
+      // 流式不可用（旧后端/网络失败）：回退一次性接口
+      try {
+        const r = await post("/api/chat", {message: text, learner_id: learnerId, use_web: $("chat-web").checked});
+        bubble.innerHTML = `<div class="md">${mdLite(r.reply)}${r.web_used ? '<p class="muted">🌐 已结合网络检索</p>' : ""}</div>`;
+      } catch (e2) { bubble.innerHTML = `<div class="md grade-bad">出错了：${escapeHtml(e2.message)}</div>`; }
+    }
+  }
   $("chat-log").scrollTop = 1e9;
 }
 $("chat-send").onclick = sendChat;
@@ -120,7 +193,7 @@ async function loadLessons() {
   lessonsCache = await api("/api/lessons");
   $("lesson-count").textContent = `(${lessonsCache.length} 讲)`;
   renderLessonList();
-  const prog = await api("/api/progress/default");
+  const prog = await api("/api/progress/" + encodeURIComponent(learnerId));
   renderPath(prog);
 }
 function renderLessonList(selId) {
@@ -160,8 +233,8 @@ $("goal-plan").onclick = async () => {
   if (!goal) return alert("先写一句学习目标");
   $("goal-plan").disabled = true; $("goal-plan").textContent = "规划中…";
   try {
-    await post("/api/learn/path", {goal});
-    await renderPath(await api("/api/progress/default"));
+    await post("/api/learn/path", {goal, learner_id: learnerId});
+    await renderPath(await api("/api/progress/" + encodeURIComponent(learnerId)));
   } catch (e) { alert("规划失败：" + e.message); }
   $("goal-plan").disabled = false; $("goal-plan").textContent = "生成学习计划";
 };
@@ -174,7 +247,7 @@ async function openLesson(lessonId) {
   $("teach-body").innerHTML = "<p class='muted'>导师备课中…</p>";
   $("grade-result").innerHTML = ""; $("ex-input").value = "";
   try {
-    const r = await post("/api/learn/teach", {lesson_id: lessonId});
+    const r = await post("/api/learn/teach", {lesson_id: lessonId, learner_id: learnerId});
     currentLesson = r.lesson;
     const ex = (r.lesson.exercises || [])[0];
     $("teach-body").innerHTML = mdLite(r.teaching);
@@ -194,6 +267,7 @@ $("ex-submit").onclick = async () => {
       lesson_id: currentLesson.id,
       exercise_id: (currentLesson.exercises[0] || {}).id || "",
       code: content,
+      learner_id: learnerId,
     });
     const cls = g.passed ? "grade-ok" : "grade-bad";
     $("grade-result").innerHTML = mdLite(
@@ -210,7 +284,7 @@ $("ex-submit").onclick = async () => {
 /* ---------------- LeetCode ---------------- */
 let problemsCache = [], currentProblem = null, hintLevel = 0;
 async function loadProblems() {
-  problemsCache = await api("/api/leetcode/problems");
+  problemsCache = await api("/api/leetcode/problems?learner_id=" + encodeURIComponent(learnerId));
   const ul = $("lc-list"); ul.innerHTML = "";
   for (const p of problemsCache) {
     const li = document.createElement("li");
@@ -248,7 +322,7 @@ $("lc-run").onclick = async () => {
   $("lc-run").disabled = true;
   $("lc-results").innerHTML = mdLite("判题中…");
   try {
-    const j = await post("/api/leetcode/run", {problem_id: currentProblem.id, code: $("lc-code").value});
+    const j = await post("/api/leetcode/run", {problem_id: currentProblem.id, code: $("lc-code").value, learner_id: learnerId});
     $("lc-results").innerHTML = mdLite(renderJudge(j));
     if (j.solved) { currentProblem.solved = true; loadProblems(); }
   } catch (e) { $("lc-results").innerHTML = mdLite("评测失败：" + e.message); }
@@ -258,7 +332,7 @@ $("lc-hint").onclick = async () => {
   if (!currentProblem) return;
   hintLevel += 1;
   try {
-    const h = await post("/api/leetcode/hint", {problem_id: currentProblem.id, level: hintLevel, code: $("lc-code").value});
+    const h = await post("/api/leetcode/hint", {problem_id: currentProblem.id, level: hintLevel, code: $("lc-code").value, learner_id: learnerId});
     $("lc-results").innerHTML = mdLite(`**💡 提示（第 ${h.level} 级${h.has_more ? "，还有更深的" : "，已是最后一层"}）**\n\n${h.text}`);
     $("lc-hint-level").textContent = h.level;
   } catch (e) { $("lc-results").innerHTML = mdLite("提示失败：" + e.message); }
@@ -267,7 +341,7 @@ $("lc-review").onclick = async () => {
   if (!currentProblem) return;
   $("lc-results").innerHTML = mdLite("AI 点评中…");
   try {
-    const r = await post("/api/leetcode/review", {problem_id: currentProblem.id, code: $("lc-code").value});
+    const r = await post("/api/leetcode/review", {problem_id: currentProblem.id, code: $("lc-code").value, learner_id: learnerId});
     const c = r.coach || {};
     $("lc-results").innerHTML = mdLite(renderJudge(r.judge) +
       `\n**AI 点评**${c.score >= 0 ? "（" + c.score + " 分）" : ""}\n` +
@@ -393,7 +467,7 @@ async function loadCfg() {
         <td>${escapeHtml(p.name)}</td><td>${p.kind}</td><td>${escapeHtml(p.model)}</td>
         <td class="muted">${escapeHtml(p.detail)}</td></tr>`).join("");
     $("kb-stats").textContent = `知识块 ${h.kb.chunks} · 来源 ${h.kb.sources} · 向量 ${h.kb.embeddings ? "已建(" + h.kb.embed_model + ")" : "未建(BM25 模式)"}`;
-    const prog = await api("/api/progress/default");
+    const prog = await api("/api/progress/" + encodeURIComponent(learnerId));
     const sm = prog.skill_matrix || {};
     $("profile").innerHTML = mdLite(
       `已完成课程 ${Object.keys(prog.lessons).length} 讲；力扣 ${prog.leetcode.solved.length} 题。\n` +
@@ -418,6 +492,8 @@ $("kb-reindex").onclick = async () => {
 };
 
 /* ---------------- 启动 ---------------- */
+fillLearner();
+$("learner-sel").onchange = (e) => switchLearner(e.target.value);
 loadHealth();
 loadLessons();
 loadProblems();

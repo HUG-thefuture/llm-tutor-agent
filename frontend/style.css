@@ -91,3 +91,9 @@ textarea:focus { outline: 1px solid var(--acc); }
 .md table { border-collapse: collapse; } .md td, .md th { border: 1px solid var(--line);
   padding: 4px 8px; font-size: 13px; }
 .grade-ok { color: var(--acc2); } .grade-bad { color: var(--err); }
+
+/* 头部右侧：学员选择 + 健康 */
+.hdr-right { display: flex; align-items: center; gap: 12px; }
+.learner { color: var(--muted); font-size: 13px; }
+.learner-sel { background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  border-radius: 6px; padding: 3px 6px; font-size: 13px; }
