@@ -40,3 +40,11 @@ class MockLLM:
 @pytest.fixture
 def mock_llm():
     return MockLLM()
+
+
+@pytest.fixture(scope="session")
+def client():
+    """整库共享的 FastAPI TestClient（真实知识库/题库，LLM 可被各测试临时替换）。"""
+    from fastapi.testclient import TestClient
+    from backend.main import create_app
+    return TestClient(create_app())
