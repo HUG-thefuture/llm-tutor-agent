@@ -262,12 +262,21 @@ class LLMClient:
             b = b.strip()
             if not b:
                 continue
-            head, _, body = b.partition("】")
+            _idx, _, body = b.partition("】")
             body = body.strip()
             if not body:
                 continue
-            first = re.split(r"(?<=[。！？.!?])\s*", body)[0][:160]
-            lines.append(f"- {head.strip()}：{first}")
+            src = ""
+            for ln in body.splitlines():          # 摘出"来源: xx.md · 标题"行，避免文件名句点截断摘要
+                s = ln.strip()
+                if s.startswith("来源:"):
+                    src = s[len("来源:"):].strip()
+                    body = body.split(ln, 1)[1] if ln in body else body
+                    break
+            body = body.strip()
+            first = (re.split(r"(?<=[。！？])\s*", body)[0][:160]
+                     if body else "（详见该课程讲义原文）")
+            lines.append(f"- {src or '知识块'}：{first}")
             picked += 1
             if picked >= 4:
                 break
